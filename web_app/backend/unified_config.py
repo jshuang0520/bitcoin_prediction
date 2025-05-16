@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Unified configuration parser for Bitcoin Price Forecasting System.
+Simplified unified configuration parser for Bitcoin Price Forecasting System.
 This module provides functions to load and access the unified configuration.
 """
 import os
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 # Default configuration paths
 DEFAULT_CONFIG_PATH = '/app/configs/config.yaml'
-LOCAL_CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'configs/config.yaml')
+LOCAL_CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'configs/config.yaml')
 
 # Global configuration cache
 _config_cache = None
@@ -105,73 +105,4 @@ def get_service_config(service_name: str, config_path: Optional[str] = None) -> 
     if 'model' in config and 'model' not in service_config:
         service_config['model'] = config['model']
     
-    # Debug log the final config structure
-    logger.debug(f"Final service config keys: {list(service_config.keys())}")
-    if 'model' in service_config:
-        logger.debug(f"Model config available at top level")
-    if service_name in service_config and 'model' in service_config[service_name]:
-        logger.debug(f"Model config available in service-specific section")
-    
-    return service_config
-
-def get_global_config(config_path: Optional[str] = None) -> Dict[str, Any]:
-    """
-    Get global configuration settings.
-    
-    Args:
-        config_path: Optional path to the configuration file.
-    
-    Returns:
-        Dict containing the global configuration settings.
-    """
-    config = load_config(config_path)
-    
-    # Extract global configuration sections
-    global_config = {
-        'app': config.get('app', {}),
-        'data': config.get('data', {}),
-        'data_format': config.get('data_format', {}),
-        'kafka': config.get('kafka', {})
-    }
-    
-    return global_config
-
-def get_config_value(key_path: str, default=None, config_path: Optional[str] = None) -> Any:
-    """
-    Get a specific configuration value using dot notation.
-    
-    Args:
-        key_path: Path to the config value using dot notation (e.g., 'kafka.topic')
-        default: Default value to return if the key is not found
-        config_path: Optional path to the configuration file.
-    
-    Returns:
-        The configuration value or the default if not found.
-    """
-    config = load_config(config_path)
-    
-    # Split the key path and traverse the config dictionary
-    keys = key_path.split('.')
-    value = config
-    
-    for key in keys:
-        if isinstance(value, dict) and key in value:
-            value = value[key]
-        else:
-            return default
-    
-    return value
-
-def reload_config(config_path: Optional[str] = None) -> Dict[str, Any]:
-    """
-    Force reload of the configuration from disk.
-    
-    Args:
-        config_path: Optional path to the configuration file.
-    
-    Returns:
-        Dict containing the reloaded configuration.
-    """
-    global _config_cache
-    _config_cache = None
-    return load_config(config_path) 
+    return service_config 
