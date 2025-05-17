@@ -13,8 +13,8 @@ The Bitcoin Price Forecasting System is composed of several microservices that w
 
 ```
 docker_causify_style/
-├── configs/                  # Unified configuration files
-│   └── unified_config.yaml   # Single configuration source of truth
+├── configs/                  # Configuration files
+│   └── config.yaml           # Single configuration source of truth
 ├── utilities/                # Shared utility functions
 │   ├── timestamp_format.py   # Timestamp handling utilities
 │   ├── price_format.py       # Price formatting utilities
@@ -65,7 +65,7 @@ docker_causify_style/
 
 ### 1. Unified Configuration
 
-The system uses a unified configuration approach where all settings are defined in a single `unified_config.yaml` file. This ensures consistency across services and makes system-wide changes easier to implement.
+The system uses a unified configuration approach where all settings are defined in a single `config.yaml` file. This ensures consistency across services and makes system-wide changes easier to implement.
 
 ```python
 from utilities.unified_config import get_service_config
@@ -134,6 +134,6 @@ timestamp_str = format_timestamp(timestamp, use_t_separator=True)
 
 To apply configuration changes:
 
-1. Edit the `configs/unified_config.yaml` file
+1. Edit the `configs/config.yaml` file
 2. Run the update script: `./scripts/update_config.sh`
 3. Restart the services: `docker-compose up -d` 
