@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard
+  namespace: bitcoin-prediction
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dashboard
+  template:
+    metadata:
+      labels:
+        app: dashboard
+    spec:
+      containers:
+      - name: dashboard
+        image: dashboard:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8501
+        env:
+        - name: PYTHONUNBUFFERED
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: pythonunbuffered
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: kafka-bootstrap-servers
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        volumeMounts:
+        - name: bitcoin-data
+          mountPath: /app/data
+        livenessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /_stcore/health
+            port: 8501
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 3
+      volumes:
+      - name: bitcoin-data
+        persistentVolumeClaim:
+          claimName: bitcoin-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard
+  namespace: bitcoin-prediction
+spec:
+  type: NodePort
+  selector:
+    app: dashboard
+  ports:
+    - name: http
+      port: 8501
+      targetPort: 8501
+      nodePort: 30002 

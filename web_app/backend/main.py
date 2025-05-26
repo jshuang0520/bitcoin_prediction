@@ -71,7 +71,7 @@ async def kafka_consumer():
     """Consume messages from Kafka and broadcast to WebSocket clients."""
     consumer = KafkaConsumer(
         'bitcoin-prices',
-        bootstrap_servers=os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:29092'),
+        bootstrap_servers=os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'kafka:9092'),
         value_deserializer=lambda x: json.loads(x.decode('utf-8'))
     )
     

@@ -1,0 +1,32 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-setup
+  namespace: bitcoin-prediction
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: kafka-setup
+        image: bitnami/kafka:3.4
+        command:
+        - bash
+        - -c
+        - |
+          echo 'Waiting for Kafka to be ready...' &&
+          sleep 30 &&
+          kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:29092 --topic bitcoin-prices --partitions 1 --replication-factor 1 &&
+          echo 'Kafka setup completed successfully'
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: kafka-bootstrap-servers
+        - name: KAFKA_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: kafka-topic
+  backoffLimit: 3 

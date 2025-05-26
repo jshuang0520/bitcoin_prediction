@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-collector
+  namespace: bitcoin-prediction
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-collector
+  template:
+    metadata:
+      labels:
+        app: data-collector
+    spec:
+      containers:
+      - name: data-collector
+        image: data-collector:latest
+        imagePullPolicy: Never
+        env:
+        - name: PYTHONUNBUFFERED
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: pythonunbuffered
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: kafka-bootstrap-servers
+        - name: KAFKA_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: kafka-topic
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        volumeMounts:
+        - name: bitcoin-data
+          mountPath: /app/data
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+      volumes:
+      - name: bitcoin-data
+        persistentVolumeClaim:
+          claimName: bitcoin-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-collector
+  namespace: bitcoin-prediction
+spec:
+  selector:
+    app: data-collector
+  ports:
+    - port: 5000
+      targetPort: 5000 

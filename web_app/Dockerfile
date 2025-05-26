@@ -3,17 +3,21 @@ FROM python:3.9-slim
 WORKDIR /app
 
 # Copy requirements and install dependencies
-COPY requirements.txt .
+COPY web_app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Create utilities directory
 RUN mkdir -p /app/utilities
 
-# Copy the application code
-COPY . .
+# Copy configs and utilities
+COPY configs /app/configs
+COPY utilities /app/utilities
 
-# Copy utilities from parent directory (will be mounted in docker-compose)
-# This is a placeholder - the actual utilities will be mounted from the host
+# Copy the web application code
+COPY web_app .
+
+# Create data directories
+RUN mkdir -p /app/data/raw /app/data/predictions
 
 # Expose the port the app runs on
 EXPOSE 5000

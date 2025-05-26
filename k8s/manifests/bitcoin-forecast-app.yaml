@@ -1,0 +1,129 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bitcoin-forecast-app
+  namespace: bitcoin-prediction
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bitcoin-forecast-app
+  template:
+    metadata:
+      labels:
+        app: bitcoin-forecast-app
+    spec:
+      containers:
+      - name: bitcoin-forecast-app
+        image: bitcoin-forecast-app:latest
+        imagePullPolicy: Never
+        command: ["python", "/app/bitcoin_forecast_app/mains/run_instant.py"]
+        env:
+        - name: PYTHONUNBUFFERED
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: pythonunbuffered
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: kafka-bootstrap-servers
+        - name: KAFKA_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: kafka-topic
+        # TensorFlow optimization settings (from docker-compose)
+        - name: TF_CPP_MIN_LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: tf-cpp-min-log-level
+        - name: TF_FORCE_GPU_ALLOW_GROWTH
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: tf-force-gpu-allow-growth
+        - name: TF_XLA_FLAGS
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: tf-xla-flags
+        - name: TF_FP16_CONV_USE_FP32_COMPUTATIONS
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: tf-fp16-conv-use-fp32-computations
+        - name: TF_ENABLE_AUTO_MIXED_PRECISION
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: tf-enable-auto-mixed-precision
+        - name: PYTHONHASHSEED
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: pythonhashseed
+        # Model settings (from docker-compose)
+        - name: MODEL_BATCH_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: model-batch-size
+        - name: MODEL_VARIATIONAL_STEPS
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: model-variational-steps
+        - name: MODEL_LEARNING_RATE
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: model-learning-rate
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "1000m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        volumeMounts:
+        - name: bitcoin-data
+          mountPath: /app/data
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+      volumes:
+      - name: bitcoin-data
+        persistentVolumeClaim:
+          claimName: bitcoin-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bitcoin-forecast-app
+  namespace: bitcoin-prediction
+spec:
+  selector:
+    app: bitcoin-forecast-app
+  ports:
+    - port: 5002
+      targetPort: 5002 

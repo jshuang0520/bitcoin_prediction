@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bitcoin-config
+  namespace: bitcoin-prediction
+data:
+  # Kafka configuration (simplified for Kubernetes)
+  kafka-bootstrap-servers: "kafka:29092"
+  kafka-topic: "bitcoin-prices"
+  kafka-partitions: "1"
+  kafka-replication-factor: "1"
+  
+  # Environment variables from docker-compose
+  pythonunbuffered: "1"
+  service-name: "web_app"
+  
+  # TensorFlow optimization settings (from docker-compose bitcoin-forecast-app)
+  tf-cpp-min-log-level: "2"
+  tf-force-gpu-allow-growth: "true"
+  tf-xla-flags: "--tf_xla_enable_xla_devices"
+  tf-fp16-conv-use-fp32-computations: "1"
+  tf-enable-auto-mixed-precision: "1"
+  pythonhashseed: "0"
+  
+  # Model settings (from docker-compose)
+  model-batch-size: "64"
+  model-variational-steps: "150"
+  model-learning-rate: "0.03"
+  
+  # Zookeeper configuration
+  zookeeper-client-port: "2181"
+  zookeeper-tick-time: "2000"
+  zookeeper-init-limit: "5"
+  zookeeper-sync-limit: "2"
+  
+  # Kafka broker configuration (simplified for Kubernetes)
+  kafka-broker-id: "1"
+  kafka-zookeeper-connect: "zookeeper:2181"
+  kafka-listeners: "PLAINTEXT://0.0.0.0:29092"
+  kafka-advertised-listeners: "PLAINTEXT://kafka:29092"
+  kafka-listener-security-protocol-map: "PLAINTEXT:PLAINTEXT"
+  kafka-inter-broker-listener-name: "PLAINTEXT"
+  kafka-offsets-topic-replication-factor: "1"
+  kafka-transaction-state-log-min-isr: "1"
+  kafka-transaction-state-log-replication-factor: "1"
+  kafka-auto-create-topics-enable: "true"
+  kafka-log-retention-hours: "168"
+  kafka-log-retention-check-interval-ms: "300000"
+  kafka-log-segment-bytes: "1073741824"
+  kafka-log-retention-bytes: "-1"
+  kafka-log-cleanup-policy: "delete" 

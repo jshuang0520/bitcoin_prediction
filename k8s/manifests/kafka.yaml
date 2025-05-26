@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+  namespace: bitcoin-prediction
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+      - name: kafka
+        image: bitnami/kafka:3.4
+        ports:
+        - containerPort: 29092
+        env:
+        - name: KAFKA_CFG_ZOOKEEPER_CONNECT
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: kafka-zookeeper-connect
+        - name: KAFKA_CFG_LISTENERS
+          value: "PLAINTEXT://:29092"
+        - name: KAFKA_CFG_ADVERTISED_LISTENERS
+          value: "PLAINTEXT://kafka:29092"
+        - name: KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: kafka-auto-create-topics-enable
+        - name: KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: kafka-offsets-topic-replication-factor
+        - name: KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: kafka-transaction-state-log-min-isr
+        - name: KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+          valueFrom:
+            configMapKeyRef:
+              name: bitcoin-config
+              key: kafka-transaction-state-log-replication-factor
+        - name: ALLOW_PLAINTEXT_LISTENER
+          value: "yes"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: kafka-data
+          mountPath: /bitnami/kafka
+        livenessProbe:
+          tcpSocket:
+            port: 29092
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 29092
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 3
+      volumes:
+      - name: kafka-data
+        persistentVolumeClaim:
+          claimName: kafka-data-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: bitcoin-prediction
+spec:
+  selector:
+    app: kafka
+  ports:
+    - name: kafka
+      port: 29092
+      targetPort: 29092 
