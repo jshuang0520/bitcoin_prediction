@@ -13,7 +13,6 @@ spec:
       labels:
         app: bitcoin-forecast-app
     spec:
-      priorityClassName: critical-priority  # Critical priority for ML processing
       containers:
       - name: bitcoin-forecast-app
         image: bitcoin-forecast-app:latest
@@ -82,36 +81,24 @@ spec:
             configMapKeyRef:
               name: bitcoin-config
               key: model-learning-rate
-        # Performance optimization environment variables
-        - name: PYTHONOPTIMIZE
-          value: "1"
-        - name: PYTHONDONTWRITEBYTECODE
-          value: "1"
-        - name: OMP_NUM_THREADS
-          value: "4"  # Optimize for multi-core processing
-        - name: TF_NUM_INTEROP_THREADS
-          value: "4"
-        - name: TF_NUM_INTRAOP_THREADS
-          value: "4"
         resources:
           requests:
-            memory: "1Gi"      # Reduced from 4Gi to fit in cluster
-            cpu: "500m"        # Reduced from 2000m
+            memory: "1Gi"
+            cpu: "1000m"
           limits:
-            memory: "2Gi"      # Reduced from 8Gi to fit in cluster
-            cpu: "1000m"       # Reduced from 4000m
+            memory: "2Gi"
+            cpu: "2000m"
         volumeMounts:
         - name: bitcoin-data
           mountPath: /app/data
-        # Enhanced health checks for ML processing
         livenessProbe:
           exec:
             command:
             - python
             - -c
             - "import sys; sys.exit(0)"
-          initialDelaySeconds: 20  # Reduced from 30
-          periodSeconds: 20        # Reduced from 30
+          initialDelaySeconds: 30
+          periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
@@ -120,39 +107,10 @@ spec:
             - python
             - -c
             - "import sys; sys.exit(0)"
-          initialDelaySeconds: 15  # Reduced from 30
-          periodSeconds: 15        # Reduced from 30
+          initialDelaySeconds: 30
+          periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
-        # Resource optimization
-        securityContext:
-          allowPrivilegeEscalation: false
-          runAsNonRoot: true
-          runAsUser: 1000
-          capabilities:
-            drop:
-            - ALL
-      # Node affinity for ML workloads (prefer CPU-optimized nodes)
-      affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            preference:
-              matchExpressions:
-              - key: node.kubernetes.io/instance-type
-                operator: In
-                values: ["c5.xlarge", "c5.2xlarge", "m5.xlarge", "m5.2xlarge"]
-        # Anti-affinity to avoid multiple ML pods on same node
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchExpressions:
-                - key: app
-                  operator: In
-                  values: ["bitcoin-forecast-app"]
-              topologyKey: kubernetes.io/hostname
       volumes:
       - name: bitcoin-data
         persistentVolumeClaim:

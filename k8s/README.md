@@ -17,13 +17,11 @@ After running any scenario, your services are accessible at these **permanent UR
 | Task | Command |
 |------|---------|
 | **Build from scratch** | `./k8s/build-from-scratch.sh` |
-| **Deploy performance-optimized** | `./k8s/deploy-performance-optimized.sh` |
 | **Update single service** | `./k8s/update-service.sh <service-name>` |
 | **Shutdown safely** | `./k8s/shutdown.sh` |
 | **Restart after shutdown** | `./k8s/startup.sh` |
 | **Create fixed URLs** | `./k8s/create-tunnels.sh` |
 | **Check status** | `./k8s/status.sh` |
-| **Monitor performance** | `./k8s/scripts/performance-monitor.sh` |
 | **View logs** | `./k8s/logs.sh <service-name>` |
 
 ---
@@ -159,46 +157,6 @@ open http://localhost:8080      # Kafka UI
 - ✅ Waits for all services to be ready
 
 ### Expected time: ~2-3 minutes
-
----
-
-## **Scenario 5: ⚡ Deploy Performance-Optimized System**
-
-**Use case**: Maximum performance for real-time processing, production-like environment
-
-### Step-by-Step Instructions:
-
-```bash
-# Step 1: Start minikube with more resources (recommended)
-minikube start --driver=docker --cpus=4 --memory=8192
-
-# Step 2: Deploy performance-optimized system
-./k8s/deploy-performance-optimized.sh
-
-# Step 3: Monitor performance improvements
-./k8s/scripts/performance-monitor.sh
-```
-
-### What this does:
-- ✅ **+400% CPU/Memory for Data-Collector** (100m→500m CPU, 128Mi→512Mi RAM)
-- ✅ **+100-300% CPU/Memory for ML Processing** (1000m→2000m CPU, 1Gi→4Gi RAM)
-- ✅ **Priority-based resource scheduling** (Critical→High→Normal)
-- ✅ **Enhanced auto-scaling** with faster response (30-60s scale-up)
-- ✅ **Real-time processing optimizations** (TensorFlow multi-threading, Kafka tuning)
-- ✅ **Node affinity** for optimal pod placement
-
-### Performance improvements:
-- ✅ **Sub-second data collection latency**
-- ✅ **<1s prediction cycle time**
-- ✅ **Real-time dashboard updates**
-- ✅ **High-throughput Kafka streaming**
-- ✅ **Automatic scaling based on load**
-
-### Expected time: ~6-10 minutes
-
-### Resource requirements:
-- **Minimum**: 4 CPU cores, 8GB RAM
-- **Recommended**: 6 CPU cores, 12GB RAM
 
 ---
 

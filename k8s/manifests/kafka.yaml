@@ -13,7 +13,6 @@ spec:
       labels:
         app: kafka
     spec:
-      priorityClassName: critical-priority
       containers:
       - name: kafka
         image: bitnami/kafka:3.4
@@ -51,30 +50,6 @@ spec:
               key: kafka-transaction-state-log-replication-factor
         - name: ALLOW_PLAINTEXT_LISTENER
           value: "yes"
-        - name: KAFKA_CFG_NUM_NETWORK_THREADS
-          value: "8"
-        - name: KAFKA_CFG_NUM_IO_THREADS
-          value: "8"
-        - name: KAFKA_CFG_SOCKET_SEND_BUFFER_BYTES
-          value: "102400"
-        - name: KAFKA_CFG_SOCKET_RECEIVE_BUFFER_BYTES
-          value: "102400"
-        - name: KAFKA_CFG_SOCKET_REQUEST_MAX_BYTES
-          value: "104857600"
-        - name: KAFKA_CFG_NUM_PARTITIONS
-          value: "3"
-        - name: KAFKA_CFG_DEFAULT_REPLICATION_FACTOR
-          value: "1"
-        - name: KAFKA_CFG_MIN_INSYNC_REPLICAS
-          value: "1"
-        - name: KAFKA_CFG_COMPRESSION_TYPE
-          value: "snappy"
-        - name: KAFKA_CFG_BATCH_SIZE
-          value: "16384"
-        - name: KAFKA_CFG_LINGER_MS
-          value: "5"
-        - name: KAFKA_CFG_BUFFER_MEMORY
-          value: "33554432"
         resources:
           requests:
             memory: "512Mi"
@@ -88,33 +63,17 @@ spec:
         livenessProbe:
           tcpSocket:
             port: 29092
-          initialDelaySeconds: 30
-          periodSeconds: 15
+          initialDelaySeconds: 60
+          periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
           tcpSocket:
             port: 29092
-          initialDelaySeconds: 15
-          periodSeconds: 5
+          initialDelaySeconds: 30
+          periodSeconds: 10
           timeoutSeconds: 10
           failureThreshold: 3
-        securityContext:
-          allowPrivilegeEscalation: false
-          runAsNonRoot: true
-          runAsUser: 1001
-          capabilities:
-            drop:
-            - ALL
-      affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            preference:
-              matchExpressions:
-              - key: node.kubernetes.io/instance-type
-                operator: In
-                values: ["m5.large", "m5.xlarge", "c5.large", "c5.xlarge"]
       volumes:
       - name: kafka-data
         persistentVolumeClaim:

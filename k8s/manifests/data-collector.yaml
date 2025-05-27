@@ -13,7 +13,6 @@ spec:
       labels:
         app: data-collector
     spec:
-      priorityClassName: high-priority
       containers:
       - name: data-collector
         image: data-collector:latest
@@ -34,17 +33,13 @@ spec:
             configMapKeyRef:
               name: bitcoin-config
               key: kafka-topic
-        - name: PYTHONOPTIMIZE
-          value: "1"
-        - name: PYTHONDONTWRITEBYTECODE
-          value: "1"
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "500m"
+            memory: "128Mi"
+            cpu: "100m"
           limits:
-            memory: "1Gi"
-            cpu: "1000m"
+            memory: "256Mi"
+            cpu: "200m"
         volumeMounts:
         - name: bitcoin-data
           mountPath: /app/data
@@ -54,9 +49,9 @@ spec:
             - python
             - -c
             - "import sys; sys.exit(0)"
-          initialDelaySeconds: 15
-          periodSeconds: 15
-          timeoutSeconds: 5
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
           exec:
@@ -64,26 +59,10 @@ spec:
             - python
             - -c
             - "import sys; sys.exit(0)"
-          initialDelaySeconds: 10
-          periodSeconds: 10
-          timeoutSeconds: 5
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
           failureThreshold: 3
-        securityContext:
-          allowPrivilegeEscalation: false
-          runAsNonRoot: true
-          runAsUser: 1000
-          capabilities:
-            drop:
-            - ALL
-      affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            preference:
-              matchExpressions:
-              - key: node.kubernetes.io/instance-type
-                operator: In
-                values: ["m5.large", "m5.xlarge", "c5.large", "c5.xlarge"]
       volumes:
       - name: bitcoin-data
         persistentVolumeClaim:

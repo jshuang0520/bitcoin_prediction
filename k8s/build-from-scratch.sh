@@ -90,7 +90,7 @@ print_status "bitcoin-forecast-app image built"
 
 # Build web-app
 print_info "Building web-app image..."
-docker build -f web_app/Dockerfile -t web-app:latest .
+docker build -f web_app/Dockerfile -t web-app:latest ./web_app
 print_status "web-app image built"
 
 # Build dashboard
@@ -146,9 +146,9 @@ kubectl apply -f k8s/manifests/kafka-ui.yaml
 print_status "Application services deployed"
 
 # Apply resource optimization
-print_info "Applying performance optimization..."
-kubectl apply -f k8s/manifests/performance-optimization.yaml
-print_status "Performance optimization applied"
+print_info "Applying resource optimization..."
+kubectl apply -f k8s/manifests/resource-optimization.yaml
+print_status "Resource optimization applied"
 
 # Wait for all services to be ready (parallel)
 print_info "Waiting for all services to be ready..."

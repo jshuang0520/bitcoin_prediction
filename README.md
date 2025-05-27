@@ -17,14 +17,6 @@ minikube start --driver=docker
 ./k8s/create-tunnels.sh
 ```
 
-### **Performance-Optimized Setup** ⚡
-```bash
-# For maximum performance (recommended for demos)
-minikube start --driver=docker --cpus=4 --memory=8192
-./k8s/deploy-performance-optimized.sh
-./k8s/create-tunnels.sh
-```
-
 ### **Daily Development**
 ```bash
 # After code changes
@@ -47,9 +39,9 @@ minikube start --driver=docker --cpus=4 --memory=8192
 
 For simple development without Kubernetes:
 
-```bash
-docker-compose up -d
-```
+   ```bash
+   docker-compose up -d
+   ```
 
 **Services:**
 - Web App: http://localhost:5001
@@ -124,8 +116,6 @@ bitcoin_prediction/
 | **Auto-scaling** | Manual only | 1-5 pods based on load |
 | **Self-healing** | Manual restart | Automatic pod restart |
 | **Resource efficiency** | Fixed allocation | Dynamic (60% savings) |
-| **Performance optimization** | Basic | Priority classes + 400% resources |
-| **Real-time processing** | Best effort | <1s latency guaranteed |
 | **Zero-downtime updates** | Service interruption | Rolling updates |
 | **Production readiness** | Development only | Production-grade |
 
