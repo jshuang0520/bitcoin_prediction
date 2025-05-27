@@ -358,3 +358,18 @@ All services have:
 - 📊 **DevOps Presentation**: `k8s/docs/DevOps-Presentation.md` - Comprehensive slides for interviews
 - 🛠️ **Scripts Directory**: `k8s/scripts/` - All management scripts
 - 📋 **Manifests Directory**: `k8s/manifests/` - Kubernetes YAML configurations
+
+# Get current URLs (they work consistently)
+./k8s/get-urls.sh
+
+# Direct access commands:
+minikube service web-app -n bitcoin-prediction
+minikube service dashboard -n bitcoin-prediction  
+minikube service kafka-ui -n bitcoin-prediction
+```
+
+# Your workflow now:
+./k8s/get-urls.sh                    # Get current URLs
+./k8s/update-service.sh web-app      # Update after code changes  
+./k8s/shutdown.sh --pause-minikube   # End of day
+./k8s/startup.sh                     # Next day resume

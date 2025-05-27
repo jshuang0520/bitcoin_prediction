@@ -13,6 +13,7 @@ spec:
       labels:
         app: zookeeper
     spec:
+      priorityClassName: high-priority
       containers:
       - name: zookeeper
         image: confluentinc/cp-zookeeper:7.3.0
@@ -39,13 +40,21 @@ spec:
             configMapKeyRef:
               name: bitcoin-config
               key: zookeeper-sync-limit
+        - name: ZOOKEEPER_MAX_CLIENT_CNXNS
+          value: "60"
+        - name: ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT
+          value: "3"
+        - name: ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL
+          value: "24"
+        - name: ZOOKEEPER_4LW_COMMANDS_WHITELIST
+          value: "srvr,mntr,ruok"
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "100m"
-          limits:
             memory: "512Mi"
             cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
         volumeMounts:
         - name: zookeeper-data
           mountPath: /var/lib/zookeeper/data
@@ -71,6 +80,22 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            preference:
+              matchExpressions:
+              - key: node.kubernetes.io/instance-type
+                operator: In
+                values: ["m5.large", "m5.xlarge", "c5.large", "c5.xlarge"]
       volumes:
       - name: zookeeper-data
         persistentVolumeClaim:
