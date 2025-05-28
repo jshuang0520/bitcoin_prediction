@@ -1,0 +1,582 @@
+# Performance-Optimized Resource Configuration
+# This file contains enhanced resource allocation for real-time performance
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bitcoin-prediction
+  labels:
+    name: bitcoin-prediction
+    performance: optimized
+
+---
+# Resource Quota for the namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: bitcoin-prediction-quota
+  namespace: bitcoin-prediction
+spec:
+  hard:
+    requests.cpu: "5"
+    requests.memory: 6Gi
+    limits.cpu: "8"
+    limits.memory: 10Gi
+    persistentvolumeclaims: "5"
+    services: "10"
+    secrets: "10"
+    configmaps: "10"
+
+---
+# Priority Class for critical services
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: bitcoin-critical
+value: 1000
+globalDefault: false
+description: "Priority class for critical Bitcoin prediction services"
+
+---
+# Priority Class for standard services
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: bitcoin-standard
+value: 500
+globalDefault: false
+description: "Priority class for standard Bitcoin prediction services"
+
+---
+# Enhanced Data Collector with optimized resources
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-collector
+  namespace: bitcoin-prediction
+  labels:
+    app: data-collector
+    tier: data-pipeline
+    performance: optimized
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-collector
+  template:
+    metadata:
+      labels:
+        app: data-collector
+        tier: data-pipeline
+    spec:
+      priorityClassName: bitcoin-critical
+      containers:
+      - name: data-collector
+        image: data-collector:latest
+        imagePullPolicy: Never
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:29092"
+        - name: KAFKA_TOPIC
+          value: "bitcoin-prices"
+        # Performance optimizations
+        - name: PYTHONHASHSEED
+          value: "0"
+        - name: OMP_NUM_THREADS
+          value: "2"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "300m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: bitcoin-data
+          mountPath: /app/data
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 2
+      volumes:
+      - name: bitcoin-data
+        persistentVolumeClaim:
+          claimName: bitcoin-data-pvc
+
+---
+# HPA for Data Collector
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: data-collector-hpa
+  namespace: bitcoin-prediction
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: data-collector
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+
+---
+# Enhanced Bitcoin Forecast App with maximum performance
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bitcoin-forecast-app
+  namespace: bitcoin-prediction
+  labels:
+    app: bitcoin-forecast-app
+    tier: ml-processing
+    performance: optimized
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bitcoin-forecast-app
+  template:
+    metadata:
+      labels:
+        app: bitcoin-forecast-app
+        tier: ml-processing
+    spec:
+      priorityClassName: bitcoin-critical
+      containers:
+      - name: bitcoin-forecast-app
+        image: bitcoin-forecast-app:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5002
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:29092"
+        - name: KAFKA_TOPIC
+          value: "bitcoin-prices"
+        # ML Performance optimizations
+        - name: TF_CPP_MIN_LOG_LEVEL
+          value: "2"
+        - name: TF_ENABLE_ONEDNN_OPTS
+          value: "1"
+        - name: OMP_NUM_THREADS
+          value: "4"
+        - name: TF_NUM_INTEROP_THREADS
+          value: "2"
+        - name: TF_NUM_INTRAOP_THREADS
+          value: "4"
+        - name: PYTHONHASHSEED
+          value: "0"
+        # Model settings for performance
+        - name: MODEL_BATCH_SIZE
+          value: "32"
+        - name: MODEL_VARIATIONAL_STEPS
+          value: "50"
+        - name: MODEL_LEARNING_RATE
+          value: "0.01"
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1500m"
+          limits:
+            memory: "3Gi"
+            cpu: "2000m"
+        volumeMounts:
+        - name: bitcoin-data
+          mountPath: /app/data
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5002
+          initialDelaySeconds: 30
+          periodSeconds: 20
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 5002
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 2
+      volumes:
+      - name: bitcoin-data
+        persistentVolumeClaim:
+          claimName: bitcoin-data-pvc
+
+---
+# HPA for Bitcoin Forecast App
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: bitcoin-forecast-app-hpa
+  namespace: bitcoin-prediction
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: bitcoin-forecast-app
+  minReplicas: 1
+  maxReplicas: 2
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 85
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 120
+      policies:
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 600
+      policies:
+      - type: Pods
+        value: 1
+        periodSeconds: 300
+
+---
+# Enhanced Web App with load balancing
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-app
+  namespace: bitcoin-prediction
+  labels:
+    app: web-app
+    tier: frontend
+    performance: optimized
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web-app
+  template:
+    metadata:
+      labels:
+        app: web-app
+        tier: frontend
+    spec:
+      priorityClassName: bitcoin-standard
+      containers:
+      - name: web-app
+        image: web-app:latest
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 5000
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: SERVICE_NAME
+          value: "web-app"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:29092"
+        # Flask performance optimizations
+        - name: FLASK_ENV
+          value: "production"
+        - name: PYTHONHASHSEED
+          value: "0"
+        - name: GUNICORN_WORKERS
+          value: "2"
+        - name: GUNICORN_THREADS
+          value: "4"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "400m"
+          limits:
+            memory: "1Gi"
+            cpu: "800m"
+        volumeMounts:
+        - name: bitcoin-data
+          mountPath: /app/data
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 20
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 2
+      volumes:
+      - name: bitcoin-data
+        persistentVolumeClaim:
+          claimName: bitcoin-data-pvc
+
+---
+# HPA for Web App
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: web-app-hpa
+  namespace: bitcoin-prediction
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web-app
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 60
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+
+---
+# Enhanced Kafka with high throughput configuration
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+  namespace: bitcoin-prediction
+  labels:
+    app: kafka
+    tier: messaging
+    performance: optimized
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+        tier: messaging
+    spec:
+      priorityClassName: bitcoin-critical
+      containers:
+      - name: kafka
+        image: confluentinc/cp-kafka:7.3.0
+        ports:
+        - containerPort: 29092
+        env:
+        - name: KAFKA_BROKER_ID
+          value: "1"
+        - name: KAFKA_ZOOKEEPER_CONNECT
+          value: "zookeeper:2181"
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: "PLAINTEXT://kafka:29092"
+        - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+          value: "1"
+        # Performance optimizations
+        - name: KAFKA_NUM_NETWORK_THREADS
+          value: "8"
+        - name: KAFKA_NUM_IO_THREADS
+          value: "8"
+        - name: KAFKA_SOCKET_SEND_BUFFER_BYTES
+          value: "102400"
+        - name: KAFKA_SOCKET_RECEIVE_BUFFER_BYTES
+          value: "102400"
+        - name: KAFKA_SOCKET_REQUEST_MAX_BYTES
+          value: "104857600"
+        - name: KAFKA_NUM_PARTITIONS
+          value: "3"
+        - name: KAFKA_DEFAULT_REPLICATION_FACTOR
+          value: "1"
+        - name: KAFKA_LOG_RETENTION_HOURS
+          value: "24"
+        - name: KAFKA_LOG_SEGMENT_BYTES
+          value: "1073741824"
+        - name: KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS
+          value: "300000"
+        - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
+          value: "0"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "800m"
+          limits:
+            memory: "2Gi"
+            cpu: "1200m"
+        volumeMounts:
+        - name: kafka-data
+          mountPath: /var/lib/kafka/data
+        livenessProbe:
+          tcpSocket:
+            port: 29092
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 29092
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 3
+      volumes:
+      - name: kafka-data
+        persistentVolumeClaim:
+          claimName: kafka-data-pvc
+
+---
+# Enhanced Zookeeper with optimized settings
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+  namespace: bitcoin-prediction
+  labels:
+    app: zookeeper
+    tier: coordination
+    performance: optimized
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zookeeper
+  template:
+    metadata:
+      labels:
+        app: zookeeper
+        tier: coordination
+    spec:
+      priorityClassName: bitcoin-critical
+      containers:
+      - name: zookeeper
+        image: confluentinc/cp-zookeeper:7.3.0
+        ports:
+        - containerPort: 2181
+        env:
+        - name: ZOOKEEPER_CLIENT_PORT
+          value: "2181"
+        - name: ZOOKEEPER_TICK_TIME
+          value: "2000"
+        - name: ZOOKEEPER_INIT_LIMIT
+          value: "5"
+        - name: ZOOKEEPER_SYNC_LIMIT
+          value: "2"
+        # Performance optimizations
+        - name: ZOOKEEPER_MAX_CLIENT_CNXNS
+          value: "60"
+        - name: ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT
+          value: "3"
+        - name: ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL
+          value: "24"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "400m"
+        volumeMounts:
+        - name: zookeeper-data
+          mountPath: /var/lib/zookeeper/data
+        - name: zookeeper-log
+          mountPath: /var/lib/zookeeper/log
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "echo ruok | nc localhost 2181 || exit 1"
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - "echo ruok | nc localhost 2181 || exit 1"
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 2
+      volumes:
+      - name: zookeeper-data
+        persistentVolumeClaim:
+          claimName: zookeeper-data-pvc
+      - name: zookeeper-log
+        persistentVolumeClaim:
+          claimName: zookeeper-log-pvc 

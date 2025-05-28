@@ -90,7 +90,7 @@ print_status "bitcoin-forecast-app image built"
 
 # Build web-app
 print_info "Building web-app image..."
-docker build -f web_app/Dockerfile -t web-app:latest ./web_app
+docker build -f web_app/Dockerfile -t web-app:latest .
 print_status "web-app image built"
 
 # Build dashboard

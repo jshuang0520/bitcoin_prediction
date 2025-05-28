@@ -14,7 +14,7 @@ COPY configs /app/configs
 COPY utilities /app/utilities
 
 # Copy the web application code
-COPY web_app .
+COPY web_app/ .
 
 # Create data directories
 RUN mkdir -p /app/data/raw /app/data/predictions
