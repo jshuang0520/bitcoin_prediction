@@ -50,27 +50,46 @@ spec:
               key: kafka-transaction-state-log-replication-factor
         - name: ALLOW_PLAINTEXT_LISTENER
           value: "yes"
+        # Performance optimization settings for real-time processing
+        - name: KAFKA_CFG_NUM_NETWORK_THREADS
+          value: "8"              # Increased network threads
+        - name: KAFKA_CFG_NUM_IO_THREADS
+          value: "8"              # Increased I/O threads
+        - name: KAFKA_CFG_SOCKET_SEND_BUFFER_BYTES
+          value: "102400"         # 100KB send buffer
+        - name: KAFKA_CFG_SOCKET_RECEIVE_BUFFER_BYTES
+          value: "102400"         # 100KB receive buffer
+        - name: KAFKA_CFG_SOCKET_REQUEST_MAX_BYTES
+          value: "104857600"      # 100MB max request
+        - name: KAFKA_CFG_NUM_PARTITIONS
+          value: "4"              # More partitions for better parallelism
+        - name: KAFKA_CFG_DEFAULT_REPLICATION_FACTOR
+          value: "1"              # Single node setup
+        - name: KAFKA_CFG_LOG_FLUSH_INTERVAL_MESSAGES
+          value: "1000"           # Flush every 1000 messages for better performance
+        - name: KAFKA_CFG_LOG_FLUSH_INTERVAL_MS
+          value: "1000"           # Flush every 1 second
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "250m"
+            memory: "768Mi"       # Increased from 512Mi
+            cpu: "500m"           # Increased from 250m for better throughput
           limits:
-            memory: "1Gi"
-            cpu: "500m"
+            memory: "1.5Gi"       # Increased from 1Gi (using dashboard resources)
+            cpu: "1000m"          # Increased from 500m for real-time processing
         volumeMounts:
         - name: kafka-data
           mountPath: /bitnami/kafka
         livenessProbe:
           tcpSocket:
             port: 29092
-          initialDelaySeconds: 60
-          periodSeconds: 30
+          initialDelaySeconds: 45   # Slightly reduced for faster startup
+          periodSeconds: 20         # More frequent health checks
           timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
           tcpSocket:
             port: 29092
-          initialDelaySeconds: 30
+          initialDelaySeconds: 20   # Faster readiness check
           periodSeconds: 10
           timeoutSeconds: 10
           failureThreshold: 3

@@ -29,7 +29,7 @@ print_info() {
 }
 
 # Available services
-services=("zookeeper" "kafka" "data-collector" "bitcoin-forecast-app" "web-app" "dashboard" "kafka-ui")
+services=("zookeeper" "kafka" "data-collector" "bitcoin-forecast-app" "web-app" "kafka-ui")
 
 # Function to show usage
 show_usage() {

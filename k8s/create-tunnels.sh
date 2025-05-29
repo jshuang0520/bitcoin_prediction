@@ -121,7 +121,6 @@ while [[ $# -gt 0 ]]; do
             echo ""
             echo "Creates persistent background tunnels for Bitcoin Prediction services:"
             echo "  Web App:    http://localhost:5001"
-            echo "  Dashboard:  http://localhost:8501"
             echo "  Kafka UI:   http://localhost:8080"
             echo ""
             echo "Options:"
@@ -161,20 +160,19 @@ echo ""
 # Web App (port 5001 instead of 5000 to avoid macOS ControlCenter)
 create_tunnel "web-app" "5001" "5000"
 
-# Dashboard (port 8501)  
-create_tunnel "dashboard" "8501" "8501"
-
 # Kafka UI (port 8080)
 create_tunnel "kafka-ui" "8080" "8080"
 
 echo ""
 
 # Show the fixed URLs
-print_header "🌐 Fixed Service URLs (Always the Same!)"
-echo "🌐 Web App:     http://localhost:5001"
-echo "📊 Dashboard:   http://localhost:8501"
-echo "⚙️  Kafka UI:    http://localhost:8080"
+print_header "📱 Your Fixed URLs:"
+echo "  Web App:    http://localhost:5001"
+echo "  Kafka UI:   http://localhost:8080"
+
 echo ""
+echo "✅ Fixed tunnel URLs created successfully!"
+echo "These URLs will remain consistent and never change."
 
 # Test accessibility
 print_header "🔍 Testing Fixed URLs"
@@ -198,7 +196,6 @@ test_localhost_url() {
 }
 
 test_localhost_url "Web App" "5001"
-test_localhost_url "Dashboard" "8501"
 test_localhost_url "Kafka UI" "8080"
 
 echo ""

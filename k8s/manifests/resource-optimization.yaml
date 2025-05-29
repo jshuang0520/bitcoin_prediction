@@ -37,7 +37,7 @@ spec:
     kind: Deployment
     name: web-app
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
   - type: Resource
     resource:
@@ -52,32 +52,32 @@ spec:
         type: Utilization
         averageUtilization: 70
 ---
-# HPA for dashboard (visualization service)
+# HPA for data-collector (real-time data ingestion)
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: dashboard-hpa
+  name: data-collector-hpa
   namespace: bitcoin-prediction
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: dashboard
+    name: data-collector
   minReplicas: 1
-  maxReplicas: 3
+  maxReplicas: 2
   metrics:
   - type: Resource
     resource:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 65
+        averageUtilization: 75
   - type: Resource
     resource:
       name: memory
       target:
         type: Utilization
-        averageUtilization: 75
+        averageUtilization: 80
 ---
 # Resource Quota for the namespace
 apiVersion: v1
@@ -106,6 +106,6 @@ spec:
       cpu: "500m"
       memory: "512Mi"
     defaultRequest:
-      cpu: "100m"
-      memory: "128Mi"
+      cpu: "200m"
+      memory: "256Mi"
     type: Container 

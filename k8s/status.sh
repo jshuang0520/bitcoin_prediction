@@ -83,7 +83,7 @@ echo ""
 # Check individual service health
 print_header "Service Health Check"
 
-services=("zookeeper" "kafka" "data-collector" "bitcoin-forecast-app" "web-app" "dashboard" "kafka-ui")
+services=("zookeeper" "kafka" "data-collector" "bitcoin-forecast-app" "web-app" "kafka-ui")
 
 for service in "${services[@]}"; do
     echo -n "Checking $service: "
@@ -107,7 +107,6 @@ print_header "Access URLs"
 echo "To access your services, run these commands:"
 echo ""
 echo "Web App:      minikube service web-app -n bitcoin-prediction"
-echo "Dashboard:    minikube service dashboard -n bitcoin-prediction"
 echo "Kafka UI:     minikube service kafka-ui -n bitcoin-prediction"
 echo ""
 

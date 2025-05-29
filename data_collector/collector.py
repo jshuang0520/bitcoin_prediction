@@ -173,17 +173,29 @@ class BitcoinDataCollector:
         self.recent_prices = []  # Keep track of recent prices for outlier detection
         self.max_recent_prices = 100  # Store up to 100 recent prices
         
-        # Initialize Kafka producer with retries and acknowledgments
+        # Get performance optimization settings from environment
+        kafka_linger_ms = int(os.environ.get('KAFKA_LINGER_MS', '100'))
+        kafka_batch_size = int(os.environ.get('KAFKA_BATCH_SIZE', '32768'))
+        
+        # Initialize optimized Kafka producer for real-time performance
         self.producer = KafkaProducer(
             bootstrap_servers=config['kafka']['bootstrap_servers'],
             value_serializer=lambda x: json.dumps(x).encode(),
             acks='all',  # Wait for all replicas to acknowledge
             retries=5,   # Retry failed sends
-            retry_backoff_ms=500  # Backoff between retries
+            retry_backoff_ms=200,  # Reduced backoff for faster retries
+            linger_ms=kafka_linger_ms,  # Batch messages for better throughput
+            batch_size=kafka_batch_size,  # Larger batches for efficiency
+            buffer_memory=33554432,  # 32MB buffer (reduced from 64MB for minikube)
+            max_in_flight_requests_per_connection=3,  # Reduced from 5 to lower memory pressure
+            compression_type=None,  # No compression to avoid codec issues in minikube
+            request_timeout_ms=15000,  # Increased timeout for minikube
+            delivery_timeout_ms=45000,  # Increased total timeout
         )
         
         self.data_file = config['data']['raw_data']['instant_data']['file']
         logger.info(f"Data will be saved to {self.data_file}")
+        logger.info(f"Kafka producer optimized: linger_ms={kafka_linger_ms}, batch_size={kafka_batch_size}")
         
         # Initialize stats tracking
         self.stats = {
@@ -200,13 +212,27 @@ class BitcoinDataCollector:
 
     def publish_to_kafka(self, bar, ts):
         try:
-            self.producer.send(self.config['kafka']['topic'], bar)
-            self.producer.flush()
-            logger.info(f"[System Time: {datetime.now().strftime(TIMESTAMP_FORMAT)}] [Data Time: {ts}] → pushed to Kafka: {bar}")
-            return True
+            # Use asynchronous send with callback for better performance
+            future = self.producer.send(self.config['kafka']['topic'], bar)
+            # Add a non-blocking check with short timeout to detect memory issues early
+            try:
+                future.get(timeout=0.1)  # Very short timeout, fail fast if Kafka is overwhelmed
+                logger.info(f"[System Time: {datetime.now().strftime(TIMESTAMP_FORMAT)}] [Data Time: {ts}] → sent to Kafka: {bar}")
+                return True
+            except Exception:
+                # If immediate send fails, let it queue for background processing
+                logger.info(f"[System Time: {datetime.now().strftime(TIMESTAMP_FORMAT)}] [Data Time: {ts}] → queued for Kafka: {bar}")
+                return True
         except Exception as e:
             logger.error(f"Kafka error: {e}")
             self.stats["kafka_errors"] += 1
+            # For memory allocation errors, try to flush the producer buffer
+            if "memory" in str(e).lower() or "timeout" in str(e).lower():
+                try:
+                    logger.warning("Attempting to flush Kafka producer buffer due to memory pressure...")
+                    self.producer.flush(timeout=1)  # Quick flush attempt
+                except Exception as flush_error:
+                    logger.error(f"Failed to flush Kafka producer: {flush_error}")
             return False
     
     def update_recent_prices(self, price):

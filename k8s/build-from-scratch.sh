@@ -56,11 +56,24 @@ fi
 
 # Start minikube if not running
 print_info "Starting minikube..."
-if ! minikube status &> /dev/null; then
-    minikube start --driver=docker
-    print_status "Minikube started successfully"
+
+# Check if minikube thinks it's running
+if minikube status &> /dev/null; then
+    # Check if the actual container exists
+    if ! docker ps --format "table {{.Names}}" | grep -q "^minikube$"; then
+        print_warning "Minikube state corrupted (thinks running but container doesn't exist)"
+        print_info "Cleaning up corrupted minikube state..."
+        minikube delete
+        print_info "Starting fresh minikube..."
+        minikube start --driver=docker --memory=6144 --cpus=4
+        print_status "Minikube started successfully"
+    else
+        print_status "Minikube is already running"
+    fi
 else
-    print_status "Minikube is already running"
+    print_info "Starting new minikube cluster..."
+    minikube start --driver=docker --memory=6144 --cpus=4
+    print_status "Minikube started successfully"
 fi
 
 # Update context to ensure we're pointing to the right cluster
@@ -93,25 +106,12 @@ print_info "Building web-app image..."
 docker build -f web_app/Dockerfile -t web-app:latest .
 print_status "web-app image built"
 
-# Build dashboard
-print_info "Building dashboard image..."
-docker build -f dashboard/Dockerfile -t dashboard:latest .
-print_status "dashboard image built"
+print_header "🚀 Deploying Services to Kubernetes"
 
-print_status "All Docker images built successfully"
-
-# Deploy to Kubernetes
-print_header "🚀 Deploying to Kubernetes"
-
-# Create namespace
-print_info "Creating namespace..."
+# Apply manifests in dependency order
+print_info "Creating namespace and storage..."
 kubectl apply -f k8s/manifests/namespace.yaml
-print_status "Namespace created"
-
-# Create storage
-print_info "Creating storage resources..."
 kubectl apply -f k8s/manifests/storage.yaml
-print_status "Storage resources created"
 
 # Create configmap
 print_info "Creating configuration..."
@@ -141,7 +141,6 @@ print_info "Deploying application services..."
 kubectl apply -f k8s/manifests/data-collector.yaml
 kubectl apply -f k8s/manifests/bitcoin-forecast-app.yaml
 kubectl apply -f k8s/manifests/web-app.yaml
-kubectl apply -f k8s/manifests/dashboard.yaml
 kubectl apply -f k8s/manifests/kafka-ui.yaml
 print_status "Application services deployed"
 
@@ -156,7 +155,6 @@ print_info "Waiting for all services to be ready..."
     kubectl wait --for=condition=available --timeout=300s deployment/data-collector -n bitcoin-prediction &
     kubectl wait --for=condition=available --timeout=300s deployment/bitcoin-forecast-app -n bitcoin-prediction &
     kubectl wait --for=condition=available --timeout=300s deployment/web-app -n bitcoin-prediction &
-    kubectl wait --for=condition=available --timeout=300s deployment/dashboard -n bitcoin-prediction &
     kubectl wait --for=condition=available --timeout=300s deployment/kafka-ui -n bitcoin-prediction &
     wait
 } && print_status "All services are ready!" || print_warning "Some services may still be starting up"
@@ -174,7 +172,6 @@ echo "Your Bitcoin Prediction System is now running!"
 echo ""
 echo "📱 Fixed Service URLs (always the same):"
 echo "  Web App:    http://$MINIKUBE_IP:30001"
-echo "  Dashboard:  http://$MINIKUBE_IP:30002"
 echo "  Kafka UI:   http://$MINIKUBE_IP:30003"
 echo ""
 echo "📋 Quick Management Commands:"
@@ -197,8 +194,8 @@ echo "Your Bitcoin prediction system is ready for use!"
 echo ""
 echo "Next steps:"
 echo "1. Open http://$MINIKUBE_IP:30001 in your browser"
-echo "2. Check the dashboard at http://$MINIKUBE_IP:30002"
-echo "3. Monitor system with ./k8s/status.sh"
+echo "2. Monitor system with ./k8s/status.sh"
+echo "3. Create fixed localhost URLs: ./k8s/create-tunnels.sh"
 echo ""
 
 print_status "Build from scratch completed successfully!" 

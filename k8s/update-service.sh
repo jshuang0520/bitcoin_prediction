@@ -15,7 +15,6 @@ if [ -z "$SERVICE_NAME" ]; then
     echo "  - bitcoin-forecast-app"
     echo "  - data-collector"
     echo "  - web-app"
-    echo "  - dashboard"
     exit 1
 fi
 
@@ -66,13 +65,9 @@ case $SERVICE_NAME in
         echo "🔨 Building web-app..."
         docker build -f web_app/Dockerfile -t web-app:latest ./web_app
         ;;
-    "dashboard")
-        echo "🔨 Building dashboard..."
-        docker build -f dashboard/Dockerfile -t dashboard:latest .
-        ;;
     *)
         print_error "Unknown service: $SERVICE_NAME"
-        echo "Available services: bitcoin-forecast-app, data-collector, web-app, dashboard"
+        echo "Available services: bitcoin-forecast-app, data-collector, web-app"
         exit 1
         ;;
 esac
@@ -104,10 +99,5 @@ case $SERVICE_NAME in
         echo ""
         echo "🌐 Access web-app:"
         echo "  minikube service web-app -n bitcoin-prediction"
-        ;;
-    "dashboard")
-        echo ""
-        echo "🌐 Access dashboard:"
-        echo "  minikube service dashboard -n bitcoin-prediction"
         ;;
 esac 

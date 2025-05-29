@@ -81,13 +81,22 @@ spec:
             configMapKeyRef:
               name: bitcoin-config
               key: model-learning-rate
+        # Performance optimization for ML processing
+        - name: PYTHONOPTIMIZE
+          value: "1"
+        - name: OMP_NUM_THREADS
+          value: "2"               # Optimize OpenMP threads for TensorFlow
+        - name: TF_NUM_INTEROP_THREADS
+          value: "2"               # TensorFlow interop threads
+        - name: TF_NUM_INTRAOP_THREADS
+          value: "4"               # TensorFlow intraop threads
         resources:
           requests:
-            memory: "1Gi"
-            cpu: "1000m"
+            memory: "1.25Gi"      # Slightly increased from 1Gi for better ML performance
+            cpu: "1200m"          # Increased from 1000m for faster predictions
           limits:
-            memory: "2Gi"
-            cpu: "2000m"
+            memory: "2.25Gi"      # Slightly increased from 2Gi
+            cpu: "2200m"          # Increased from 2000m for optimal ML processing
         volumeMounts:
         - name: bitcoin-data
           mountPath: /app/data
@@ -97,8 +106,8 @@ spec:
             - python
             - -c
             - "import sys; sys.exit(0)"
-          initialDelaySeconds: 30
-          periodSeconds: 30
+          initialDelaySeconds: 20  # Reduced from 30s for faster startup
+          periodSeconds: 20        # More frequent checks for ML service
           timeoutSeconds: 10
           failureThreshold: 3
         readinessProbe:
@@ -107,8 +116,8 @@ spec:
             - python
             - -c
             - "import sys; sys.exit(0)"
-          initialDelaySeconds: 30
-          periodSeconds: 30
+          initialDelaySeconds: 15  # Faster readiness for ML service
+          periodSeconds: 15
           timeoutSeconds: 10
           failureThreshold: 3
       volumes:
