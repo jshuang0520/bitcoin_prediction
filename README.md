@@ -1,4 +1,4 @@
-# 🎯 Bitcoin Prediction System - Production-Grade ML Pipeline
+# 🎯 Bitcoin Prediction System - Production-Grade ML Pipeline - [introduction video](https://drive.google.com/file/d/1lo1wuFpiqevnO9g5XpEPVWIaNEXgoSTo/view?usp=sharing)
 
 A real-time Bitcoin price prediction system demonstrating **enterprise-level DevOps and Infrastructure engineering** with Docker containerization and Kubernetes orchestration.
 
