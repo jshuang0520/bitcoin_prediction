@@ -1,4 +1,4 @@
-# Bitcoin Price Forecasting System
+# Bitcoin Price Forecasting System - [introduction video](https://drive.google.com/file/d/1lo1wuFpiqevnO9g5XpEPVWIaNEXgoSTo/view?usp=sharing)
 
 An advanced real-time Bitcoin price forecasting system leveraging TensorFlow Probability for time series modeling with uncertainty quantification. The system provides accurate price predictions with confidence intervals and comprehensive performance metrics.
 
